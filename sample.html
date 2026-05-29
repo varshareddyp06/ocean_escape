@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Black Hole Escape</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:black;
+    color:white;
+    font-family:Arial;
+}
+
+#score{
+    position:absolute;
+    top:10px;
+    left:10px;
+    font-size:24px;
+}
+
+canvas{
+    display:block;
+}
+</style>
+</head>
+
+<body>
+
+<div id="score">Score: 0</div>
+
+<canvas id="game"></canvas>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let score = 0;
+
+const ship = {
+    x:100,
+    y:100,
+    size:20,
+    speed:5
+};
+
+const blackHole = {
+    x:canvas.width/2,
+    y:canvas.height/2,
+    radius:40
+};
+
+let orb = createOrb();
+
+function createOrb(){
+    return{
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        size:10
+    };
+}
+
+const keys = {};
+
+document.addEventListener("keydown",e=>{
+    keys[e.key]=true;
+});
+
+document.addEventListener("keyup",e=>{
+    keys[e.key]=false;
+});
+
+function update(){
+
+    if(keys["ArrowUp"])
+        ship.y -= ship.speed;
+
+    if(keys["ArrowDown"])
+        ship.y += ship.speed;
+
+    if(keys["ArrowLeft"])
+        ship.x -= ship.speed;
+
+    if(keys["ArrowRight"])
+        ship.x += ship.speed;
+
+    let dx = blackHole.x - ship.x;
+    let dy = blackHole.y - ship.y;
+
+    let distance =
+    Math.sqrt(dx*dx + dy*dy);
+
+    let gravity = 1200/(distance*distance);
+
+    ship.x += dx/distance * gravity;
+    ship.y += dy/distance * gravity;
+
+    let orbDistance =
+    Math.sqrt(
+        (ship.x-orb.x)**2 +
+        (ship.y-orb.y)**2
+    );
+
+    if(orbDistance < 25){
+        score++;
+        document.getElementById("score")
+        .innerText = "Score: " + score;
+
+        orb = createOrb();
+    }
+
+    if(distance < blackHole.radius){
+
+        alert(
+        "Game Over!\nScore: " + score
+        );
+
+        location.reload();
+    }
+}
+
+function draw(){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.beginPath();
+    ctx.arc(
+        blackHole.x,
+        blackHole.y,
+        blackHole.radius,
+        0,
+        Math.PI*2
+    );
+    ctx.fillStyle="purple";
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(
+        orb.x,
+        orb.y,
+        orb.size,
+        0,
+        Math.PI*2
+    );
+    ctx.fillStyle="cyan";
+    ctx.fill();
+
+    ctx.fillStyle="white";
+    ctx.fillRect(
+        ship.x,
+        ship.y,
+        ship.size,
+        ship.size
+    );
+}
+
+function gameLoop(){
+
+    update();
+    draw();
+
+    requestAnimationFrame(
+        gameLoop
+    );
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>

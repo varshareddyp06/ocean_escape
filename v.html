@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ocean Escape</title>
+<style>
+body{margin:0;overflow:hidden;font-family:Arial;background:#001b44}
+canvas{display:block}
+#menu,#end{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;background:linear-gradient(#009dff,#001b44)}
+#end{display:none}
+button{padding:14px 30px;border:none;border-radius:12px;font-size:20px}
+#hud{position:absolute;top:10px;left:10px;color:#fff;font-size:24px;display:none}
+</style>
+</head>
+<body>
+<div id="menu">
+<h1>🌊 OCEAN ESCAPE</h1>
+<p>🐢 Collect 🐌 Snails • Avoid 🦈 Sharks • Survive 60 Seconds</p>
+<button onclick="start()">START</button>
+</div>
+<div id="hud">Score: <span id="s">0</span> | Time: <span id="t">60</span></div>
+<div id="end"><h1 id="msg"></h1><button onclick="location.reload()">Play Again</button></div>
+<canvas id="c"></canvas>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');
+c.width=innerWidth;c.height=innerHeight;
+let score=0,time=60,run=false;
+const p={x:200,y:200,s:7};
+let foods=Array.from({length:12},()=>({x:Math.random()*c.width,y:Math.random()*c.height}));
+let sharks=[{x:900,y:100},{x:1000,y:500}];
+const k={};
+onkeydown=e=>k[e.key]=1; onkeyup=e=>k[e.key]=0;
+
+function start(){
+menu.style.display='none';hud.style.display='block';run=true;
+setInterval(()=>{if(!run)return;time--;t.innerText=time;if(time<=0)finish("🏆 You Win!");},1000);
+}
+
+function finish(m){run=false;msg.innerText=m+" Score: "+score;end.style.display='flex';}
+
+function update(){
+if(!run)return;
+if(k.ArrowUp)p.y-=p.s;
+if(k.ArrowDown)p.y+=p.s;
+if(k.ArrowLeft)p.x-=p.s;
+if(k.ArrowRight)p.x+=p.s;
+
+foods.forEach(f=>{
+if(Math.hypot(p.x-f.x,p.y-f.y)<40){
+score+=5;s.innerText=score;
+f.x=Math.random()*c.width;f.y=Math.random()*c.height;
+}
+});
+
+sharks.forEach(sh=>{
+let dx=p.x-sh.x,dy=p.y-sh.y,d=Math.hypot(dx,dy);
+sh.x+=dx/d*2; sh.y+=dy/d*2;
+if(d<50) finish("🦈 Shark Attack!");
+});
+}
+
+function draw(){
+let g=x.createLinearGradient(0,0,0,c.height);
+g.addColorStop(0,"#1db9ff"); g.addColorStop(1,"#001b44");
+x.fillStyle=g; x.fillRect(0,0,c.width,c.height);
+
+for(let i=0;i<100;i++){
+x.fillStyle="rgba(255,255,255,.2)";
+x.beginPath(); x.arc((i*53+Date.now()/40)%c.width,(i*29)%c.height,2,0,7); x.fill();
+}
+
+foods.forEach(f=>{x.font="42px Segoe UI Emoji";x.fillText("🐌",f.x,f.y);});
+sharks.forEach(sh=>{x.font="90px Segoe UI Emoji";x.fillText("🦈",sh.x,sh.y);});
+x.font="90px Segoe UI Emoji";x.fillText("🐢",p.x,p.y);
+}
+
+(function loop(){update();draw();requestAnimationFrame(loop)})();
+</script>
+</body></html>
